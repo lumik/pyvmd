@@ -55,10 +55,12 @@ class Analyzer(object):
     """
     Iteratively loads the trajectory files and performs analysis.
     """
-    def __init__(self, molecule, traj_files, step=1, chunk=100):
+    def __init__(self, molecule, traj_files, filetype=None, step=1, chunk=100):
         """
         @param molecule: Molecule used for loading the trajectory.
         @param traj_files: List of trajectory files
+        @param filetype: Format of file. If not present or `None` it is guessed.
+        @type filetype: One of `molecules.FORMAT_` constants, string or `None`
         @param step: Load every 'step'th frame from trajectory.
         @type step: Positive integer
         @param chunk: Number of frames to load at once
@@ -72,6 +74,7 @@ class Analyzer(object):
         self.step = step
         self.chunk = chunk
         self._callbacks = []
+        self.filetype = filetype
 
     def add_callback(self, callback, *args, **kwargs):
         """
@@ -103,7 +106,7 @@ class Analyzer(object):
                 # Load 'chunk' frames
                 stop = start + self.step * self.chunk - 1
                 LOGGER.debug('Loading %s from %d to %d, every %d', filename, start, stop, self.step)
-                self.molecule.load(filename, start=start, stop=stop, step=self.step)
+                self.molecule.load(filename, filetype=self.filetype, start=start, stop=stop, step=self.step)
                 loaded = len(self.molecule.frames)
                 if not loaded:
                     # No frames were loaded

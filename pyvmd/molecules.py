@@ -18,12 +18,15 @@ FORMAT_DCD = 'dcd'
 FORMAT_PARM7 = 'parm7'
 FORMAT_PDB = 'pdb'
 FORMAT_PSF = 'psf'
+FORMAT_CRDBOX = 'crdbox'
+FORMAT_CRD = 'crd'
 # Dictionary to translate file extensions to file formats
 FORMATS = {
     'dcd': FORMAT_DCD,
     'pdb': FORMAT_PDB,
     'psf': FORMAT_PSF,
     'prmtop': FORMAT_PARM7,
+    'mdcrd': FORMAT_CRDBOX,
 }
 
 
