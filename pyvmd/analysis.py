@@ -31,16 +31,16 @@ class HydrogenBond(object):
         return not self.__eq__(other)
 
 
-def _get_bonds(donor, acceptor, donor_hydrogens, angle):
+def _get_bonds(donor, acceptor, donor_hydrogens, angle, max_angle):
     # Utility function which finds hydrogen bonds between donor atom and acceptor atom
     hydrogens = (a for a in donor.bonded if a in donor_hydrogens)
     for hydrogen in hydrogens:
-        # Check the angle. If it's big enough, then it is a hydrogen bond
-        if measure.angle(donor, hydrogen, acceptor) >= angle:
+        # Check the angle. If it's in the angle range, then it is a hydrogen bond
+        if angle <= measure.angle(donor, hydrogen, acceptor) <= max_angle:
             yield HydrogenBond(donor, hydrogen, acceptor)
 
 
-def hydrogen_bonds(donors, acceptors=None, distance=3.0, angle=135):
+def hydrogen_bonds(donors, acceptors=None, distance=3.0, angle=135, max_angle=180):
     """
     Returns iterator of hydrogen bonds between the selections.
 
@@ -51,13 +51,16 @@ def hydrogen_bonds(donors, acceptors=None, distance=3.0, angle=135):
     @param distance: Maximal distance between donor and acceptor
     @type distance: Non-negative number
     @param angle: Minimal angle in degrees between donor, hydrogen and acceptor
-    @type angle: Number between 0 and 180
+    @type angle: Number between 0 and max_angle
+    @param max_angle: Maximal angle in degrees between donor, hydrogen and acceptor
+    @type max_angle: Number between angle and 180
     @rtype: Generator of HydrogenBond objects
     """
     assert isinstance(donors, Selection)
     assert acceptors is None or isinstance(acceptors, Selection)
     assert distance >= 0
-    assert 0 <= angle <= 180
+    assert 0 <= angle <= max_angle
+    assert max_angle <= 180
 
     # Remove hydrogen atoms from selection. This can be done safely, hydrogens are never donors.
     donor_heavy = Selection('(%s) and noh' % donors.selection, donors.molecule, donors.frame)
@@ -73,11 +76,11 @@ def hydrogen_bonds(donors, acceptors=None, distance=3.0, angle=135):
         acceptor_hydrogens = Selection('hydrogen', acceptors.molecule, acceptors.frame)
 
     for donor, acceptor in donor_heavy.contacts(acceptor_heavy, distance):
-        for hbond in _get_bonds(donor, acceptor, donor_hydrogens, angle):
+        for hbond in _get_bonds(donor, acceptor, donor_hydrogens, angle, max_angle):
             yield hbond
         # If acceptors and donors share atoms, contacts return pair only once.
         # Check if donor and acceptors can have opposite roles.
         if donor in acceptor_heavy and acceptor in donor_heavy:
             # Donor can be acceptor and acceptor can be donor, check the hydrogen bonds.
-            for hbond in _get_bonds(acceptor, donor, acceptor_hydrogens, angle):
+            for hbond in _get_bonds(acceptor, donor, acceptor_hydrogens, angle, max_angle):
                 yield hbond
